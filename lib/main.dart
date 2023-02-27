@@ -1,7 +1,11 @@
+import 'package:calendarapp/screens/calendar.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:calendarapp/screens/sputil.dart' show SpUtils;
 
 void main() {
-  runApp(const MainApp());
+  initializeDateFormatting()
+      .then((_) => {runApp(const MainApp()), loadAsync()});
 }
 
 class MainApp extends StatelessWidget {
@@ -11,10 +15,12 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
+        body: Calendar(),
       ),
     );
   }
+}
+
+void loadAsync() async {
+  await SpUtils.getInstance();
 }
