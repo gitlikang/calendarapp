@@ -1,5 +1,6 @@
 import 'package:calendarapp/screens/event.dart';
 import 'package:calendarapp/screens/sputil.dart';
+import 'package:calendarapp/screens/style.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_swipe_action_cell/flutter_swipe_action_cell.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -17,9 +18,10 @@ class _CalendarState extends State<Calendar> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
-  static const selctFontSize = 10.0;
+  static const selctFontSize = 12.0;
 
   final calendarStyle = const CalendarStyle();
+  final style = const Style();
 
   final _eventInputController = TextEditingController();
 
@@ -225,14 +227,85 @@ class _CalendarState extends State<Calendar> {
 */
   }
 
+  Widget? cellBuilder(BuildContext context, DateTime day, DateTime focusedDay,
+      {outsideFlag = false}) {
+    var isWeekend =
+        day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
+    var today = DateTime.now();
+
+    var selectFlag = day.year == _selectedDay.year &&
+        day.month == _selectedDay.month &&
+        day.day == _selectedDay.day;
+    var todayFlag = day.year == today.year &&
+        day.month == today.month &&
+        day.day == today.day;
+
+    var jr = jieriText(day);
+    var jrFlag = true;
+
+    if (jr == '') {
+      jr = lunarMonthDayText(day);
+      jrFlag = false;
+    }
+
+    var holiday = HolidayUtil.getHolidayByYmd(day.year, day.month, day.day);
+
+    var holidayText = '休';
+    var holidayColor = Colors.green;
+
+    if (holiday != null && holiday.isWork()) {
+      holidayText = '班';
+      holidayColor = Colors.red;
+    }
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      margin: calendarStyle.cellMargin,
+      padding: calendarStyle.cellPadding,
+      alignment: calendarStyle.cellAlignment,
+      decoration: style.getDecoration(
+          isWeekend: isWeekend,
+          selectFlag: selectFlag,
+          todayFlag: todayFlag,
+          outsideFlag: outsideFlag),
+      child: Stack(
+        children: [
+          Offstage(
+            offstage: holiday == null,
+            child: Container(
+              margin: const EdgeInsets.only(left: 28),
+              child: Text(holidayText,
+                  style: TextStyle(fontSize: 10, color: holidayColor)),
+            ),
+          ),
+          RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                  text: '${day.day}',
+                  style: style.getTextStyle(
+                      isWeekend: isWeekend,
+                      selectFlag: selectFlag,
+                      todayFlag: todayFlag,
+                      outsideFlag: outsideFlag),
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: '\n$jr',
+                      style: style.getTextStyle(
+                          isWeekend: isWeekend,
+                          selectFlag: selectFlag,
+                          todayFlag: todayFlag,
+                          outsideFlag: outsideFlag,
+                          jiejiari: jrFlag),
+                    ),
+                  ]))
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     _selectedEvents.value = _getEventsForDay(_selectedDay);
-
-    final margin = calendarStyle.cellMargin;
-    final padding = calendarStyle.cellPadding;
-    final alignment = calendarStyle.cellAlignment;
-    const duration = Duration(milliseconds: 250);
 
     var lunarDate = Lunar.fromDate(_selectedDay);
     var lunarYearMonth =
@@ -287,7 +360,7 @@ class _CalendarState extends State<Calendar> {
                   headerStyle: const HeaderStyle(
                     formatButtonVisible: false,
                   ),
-                  firstDay: DateTime.utc(2000, 1, 1),
+                  firstDay: DateTime.utc(1900, 1, 1),
                   lastDay: DateTime.utc(3000, 11, 21),
                   focusedDay: _focusedDay,
                   calendarFormat: _calendarFormat,
@@ -334,75 +407,17 @@ class _CalendarState extends State<Calendar> {
                   calendarBuilders: CalendarBuilders(defaultBuilder:
                       (BuildContext context, DateTime day,
                           DateTime focusedDay) {
-                    var isWeekend = day.weekday == DateTime.saturday ||
-                        day.weekday == DateTime.sunday;
-
-                    var jr = jieriText(day);
-                    var textStyle = const TextStyle(color: Colors.blue);
-
-                    if (jr == '') {
-                      jr = lunarMonthDayText(day);
-                      textStyle = const TextStyle(color: Colors.black);
-                    }
-                    return AnimatedContainer(
-                      duration: duration,
-                      margin: margin,
-                      padding: padding,
-                      decoration: isWeekend
-                          ? calendarStyle.weekendDecoration
-                          : calendarStyle.defaultDecoration,
-                      alignment: alignment,
-                      child: RichText(
-                          textAlign: TextAlign.center,
-                          text: TextSpan(
-                              text: '${day.day}',
-                              style: const TextStyle(color: Colors.black),
-                              children: <TextSpan>[
-                                TextSpan(text: '\n$jr', style: textStyle),
-                              ])),
-                    );
+                    return cellBuilder(context, day, focusedDay);
                   }, selectedBuilder: (BuildContext context, DateTime day,
                       DateTime focusedDay) {
-                    return AnimatedContainer(
-                      duration: duration,
-                      margin: margin,
-                      padding: padding,
-                      decoration: calendarStyle.selectedDecoration,
-                      alignment: alignment,
-                      child: Text(cellText(day),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Color(0xFFFAFAFA),
-                            fontSize: selctFontSize,
-                          )),
-                    );
+                    return cellBuilder(context, day, focusedDay);
                   }, todayBuilder: (BuildContext context, DateTime day,
                       DateTime focusedDay) {
-                    return AnimatedContainer(
-                      duration: duration,
-                      margin: margin,
-                      padding: padding,
-                      decoration: calendarStyle.todayDecoration,
-                      alignment: alignment,
-                      child: Text(cellText(day),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Color(0xFFFAFAFA),
-                            fontSize: selctFontSize,
-                          )),
-                    );
+                    return cellBuilder(context, day, focusedDay);
                   }, outsideBuilder: (BuildContext context, DateTime day,
                       DateTime focusedDay) {
-                    return AnimatedContainer(
-                      duration: duration,
-                      margin: margin,
-                      padding: padding,
-                      decoration: calendarStyle.outsideDecoration,
-                      alignment: alignment,
-                      child: Text(cellText(day),
-                          textAlign: TextAlign.center,
-                          style: calendarStyle.outsideTextStyle),
-                    );
+                    return cellBuilder(context, day, focusedDay,
+                        outsideFlag: true);
                   }, singleMarkerBuilder:
                       (BuildContext context, DateTime day, Event event) {
                     return Padding(
