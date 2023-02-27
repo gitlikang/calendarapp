@@ -1,6 +1,7 @@
 import 'package:calendarapp/screens/event.dart';
 import 'package:calendarapp/screens/sputil.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_swipe_action_cell/flutter_swipe_action_cell.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:lunar/lunar.dart';
 
@@ -125,7 +126,8 @@ class _CalendarState extends State<Calendar> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
                 child: TextFormField(
-                  maxLines: 1,
+                  maxLines: 4,
+                  autofocus: true,
                   decoration: const InputDecoration(
                     border: UnderlineInputBorder(),
                     labelText: '输入笔记内容',
@@ -367,35 +369,45 @@ class _CalendarState extends State<Calendar> {
                 ValueListenableBuilder<List<Event>>(
                   valueListenable: _selectedEvents,
                   builder: (context, value, _) {
-                    return ListView.builder(
+                    return ListView.separated(
                       shrinkWrap: true,
                       itemCount: value.length,
+                      physics: const NeverScrollableScrollPhysics(),
                       itemBuilder: (context, index) {
-                        return Container(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 20.0,
-                            vertical: 1.0,
-                          ),
-                          decoration: const BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                  width: 1.0,
-                                  color: Colors.grey,
-                                  style: BorderStyle.solid,
-                                  strokeAlign: BorderSide.strokeAlignInside),
-                            ),
-                          ),
-                          child: ListTile(
-                            onTap: () => print('${value[index]}'),
-                            title: Text('${value[index]}'),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
+                        return SwipeActionCell(
+                          key: ValueKey(value[index].title),
+                          trailingActions: <SwipeAction>[
+                            SwipeAction(
+                              ///
+                              /// This attr should be passed to first action
+                              ///
+                              nestedAction: SwipeNestedAction(title: "确认删除"),
+                              title: "删除",
+                              onTap: (CompletionHandler handler) async {
+                                await handler(true);
                                 _removeEventsForDay(
                                     _selectedDay, index, value[index].title);
+                                setState(() {});
                               },
+                              color: Colors.red,
+                            ),
+                          ],
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 20.0,
+                              vertical: 1.0,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Text('${value[index]}'),
                             ),
                           ),
+                        );
+                      },
+                      separatorBuilder: (BuildContext context, int index) {
+                        return const Divider(
+                          color: Colors.grey,
+                          height: 1,
                         );
                       },
                     );
