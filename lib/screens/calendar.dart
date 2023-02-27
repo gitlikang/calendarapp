@@ -38,6 +38,48 @@ class _CalendarState extends State<Calendar> {
     super.dispose();
   }
 
+  String lunarMonthDayText(DateTime day) {
+    Lunar lunarDate = Lunar.fromDate(day);
+    if (lunarDate.getDay() == 1) {
+      return '${lunarDate.getMonthInChinese()}月';
+    }
+
+    return lunarDate.getDayInChinese();
+  }
+
+  String jieriText(DateTime day) {
+    Lunar lunarDate = Lunar.fromDate(day);
+    var festivals = lunarDate.getFestivals();
+    if (festivals.isEmpty) {
+      Solar solarDate = Solar.fromDate(day);
+      festivals = solarDate.getFestivals();
+    }
+    if (festivals.isEmpty) {
+      var s = lunarDate.getJieQi();
+      if (s != '') {
+        festivals = <String>[s];
+      }
+    }
+    if (festivals.isEmpty) {
+      var shujiu = lunarDate.getShuJiu();
+      if (shujiu != null && shujiu.getIndex() == 1) {
+        festivals = <String>[shujiu.getName()];
+      }
+    }
+    if (festivals.isEmpty) {
+      var fu = lunarDate.getFu();
+      if (fu != null && fu.getIndex() == 1) {
+        festivals = <String>[fu.getName()];
+      }
+    }
+
+    if (festivals.isNotEmpty) {
+      return festivals.first;
+    }
+
+    return '';
+  }
+
   String cellText(DateTime day) {
     var text = '${day.day}';
 
@@ -126,7 +168,7 @@ class _CalendarState extends State<Calendar> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
                 child: TextFormField(
-                  maxLines: 4,
+                  maxLines: 3,
                   autofocus: true,
                   decoration: const InputDecoration(
                     border: UnderlineInputBorder(),
@@ -242,6 +284,9 @@ class _CalendarState extends State<Calendar> {
               children: [
                 TableCalendar<Event>(
                   locale: 'zh_CN',
+                  headerStyle: const HeaderStyle(
+                    formatButtonVisible: false,
+                  ),
                   firstDay: DateTime.utc(2000, 1, 1),
                   lastDay: DateTime.utc(3000, 11, 21),
                   focusedDay: _focusedDay,
@@ -291,6 +336,14 @@ class _CalendarState extends State<Calendar> {
                           DateTime focusedDay) {
                     var isWeekend = day.weekday == DateTime.saturday ||
                         day.weekday == DateTime.sunday;
+
+                    var jr = jieriText(day);
+                    var textStyle = const TextStyle(color: Colors.blue);
+
+                    if (jr == '') {
+                      jr = lunarMonthDayText(day);
+                      textStyle = const TextStyle(color: Colors.black);
+                    }
                     return AnimatedContainer(
                       duration: duration,
                       margin: margin,
@@ -299,13 +352,14 @@ class _CalendarState extends State<Calendar> {
                           ? calendarStyle.weekendDecoration
                           : calendarStyle.defaultDecoration,
                       alignment: alignment,
-                      child: Text(
-                        cellText(day),
-                        textAlign: TextAlign.center,
-                        style: isWeekend
-                            ? calendarStyle.weekendTextStyle
-                            : calendarStyle.defaultTextStyle,
-                      ),
+                      child: RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                              text: '${day.day}',
+                              style: const TextStyle(color: Colors.black),
+                              children: <TextSpan>[
+                                TextSpan(text: '\n$jr', style: textStyle),
+                              ])),
                     );
                   }, selectedBuilder: (BuildContext context, DateTime day,
                       DateTime focusedDay) {
@@ -405,9 +459,12 @@ class _CalendarState extends State<Calendar> {
                         );
                       },
                       separatorBuilder: (BuildContext context, int index) {
-                        return const Divider(
-                          color: Colors.grey,
-                          height: 1,
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 30.0),
+                          child: Divider(
+                            color: Colors.grey,
+                            height: 1,
+                          ),
                         );
                       },
                     );
@@ -486,6 +543,7 @@ class _CalendarState extends State<Calendar> {
                     ],
                   ),
                 ),
+                const Divider(height: 2),
               ],
             ),
           ],
