@@ -62,10 +62,16 @@ class Style {
       jiejiari = false}) {
     return outsideFlag
         ? outsideTextStyle
-        : jiejiari
-            ? festivalTextStyle
-            : isWeekend
-                ? weekendTextStyle
-                : defaultTextStyle;
+        : todayFlag
+            ? jiejiari || isWeekend
+                ? selectFlag
+                    ? defaultTextStyle
+                    : todayTextStyle
+                : todayTextStyle
+            : jiejiari
+                ? festivalTextStyle
+                : isWeekend
+                    ? weekendTextStyle
+                    : defaultTextStyle;
   }
 }

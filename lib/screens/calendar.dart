@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_swipe_action_cell/flutter_swipe_action_cell.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:lunar/lunar.dart';
+import 'dart:convert';
+import 'package:flutter/services.dart';
+
+import 'historydata.dart';
 
 class Calendar extends StatefulWidget {
   const Calendar({super.key});
@@ -18,16 +22,22 @@ class _CalendarState extends State<Calendar> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
-  static const selctFontSize = 12.0;
 
   final calendarStyle = const CalendarStyle();
   final style = const Style();
 
   final _eventInputController = TextEditingController();
+  var _hts = <String, HistoryData>{};
 
   @override
   void initState() {
     super.initState();
+
+    rootBundle.loadString('assets/HTAll.json').then((value) {
+      var ds = json.decode(value) as Map<String, dynamic>;
+      _hts = ds.map((key, value) => MapEntry(key, HistoryData.fromJson(value)));
+      setState(() {});
+    });
 
     _selectedDay = _focusedDay;
     _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay));
@@ -80,6 +90,34 @@ class _CalendarState extends State<Calendar> {
     }
 
     return '';
+  }
+
+  List<String> jieriList(DateTime day) {
+    List<String> l = [];
+    Lunar lunarDate = Lunar.fromDate(day);
+    var festivals = lunarDate.getFestivals();
+    l.addAll(festivals);
+
+    Solar solarDate = Solar.fromDate(day);
+    festivals = solarDate.getFestivals();
+    l.addAll(festivals);
+
+    var s = lunarDate.getJieQi();
+    if (s != '') {
+      l.add(s);
+    }
+
+    var shujiu = lunarDate.getShuJiu();
+    if (shujiu != null) {
+      l.add('${shujiu.getName()}第${shujiu.getIndex()}天');
+    }
+
+    var fu = lunarDate.getFu();
+    if (fu != null) {
+      l.add('${fu.getName()}第${fu.getIndex()}天');
+    }
+
+    return l;
   }
 
   String cellText(DateTime day) {
@@ -285,7 +323,7 @@ class _CalendarState extends State<Calendar> {
                   style: style.getTextStyle(
                       isWeekend: isWeekend,
                       selectFlag: selectFlag,
-                      todayFlag: todayFlag,
+                      todayFlag: false,
                       outsideFlag: outsideFlag),
                   children: <TextSpan>[
                     TextSpan(
@@ -313,7 +351,14 @@ class _CalendarState extends State<Calendar> {
     var yi = lunarDate.getDayYi().join(',');
     var ji = lunarDate.getDayJi().join(',');
 
+    var jiriList = jieriList(_selectedDay);
+
+    var historyTodayEvents = _hts[
+        _selectedDay.month.toString().padLeft(2, '0') +
+            _selectedDay.day.toString().padLeft(2, '0')];
+
     return Scaffold(
+        backgroundColor: const Color.fromARGB(0xFF, 0xF4, 0xF4, 0xF4),
         appBar: AppBar(
           title: const Text('日历'),
         ),
@@ -435,130 +480,238 @@ class _CalendarState extends State<Calendar> {
                   }),
                 ),
                 const SizedBox(height: 8.0),
-                ValueListenableBuilder<List<Event>>(
-                  valueListenable: _selectedEvents,
-                  builder: (context, value, _) {
-                    return ListView.separated(
-                      shrinkWrap: true,
-                      itemCount: value.length,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemBuilder: (context, index) {
-                        return SwipeActionCell(
-                          key: ValueKey(value[index].title),
-                          trailingActions: <SwipeAction>[
-                            SwipeAction(
-                              ///
-                              /// This attr should be passed to first action
-                              ///
-                              nestedAction: SwipeNestedAction(title: "确认删除"),
-                              title: "删除",
-                              onTap: (CompletionHandler handler) async {
-                                await handler(true);
-                                _removeEventsForDay(
-                                    _selectedDay, index, value[index].title);
-                                setState(() {});
-                              },
-                              color: Colors.red,
-                            ),
-                          ],
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 20.0,
-                              vertical: 1.0,
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Text('${value[index]}'),
-                            ),
-                          ),
-                        );
-                      },
-                      separatorBuilder: (BuildContext context, int index) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 30.0),
-                          child: Divider(
-                            color: Colors.grey,
-                            height: 1,
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
                 Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            lunarYearMonth,
-                            style: const TextStyle(
-                              color: Colors.red,
-                              fontSize: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            '第${SolarWeek.fromDate(_selectedDay, 0).getIndexInYear()}周',
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 5),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(20),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${lunarDate.getYearInGanZhi()}${lunarDate.getYearShengXiao()}年 ${lunarDate.getMonthInGanZhi()}月 ${lunarDate.getDayInGanZhi()}日',
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(children: [
-                        Container(
-                          width: 26,
-                          height: 26,
-                          decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(50),
-                            ),
-                            color: Colors.green,
-                          ),
-                          child: const Center(
-                              child: Text(
-                            '宜',
-                            style: TextStyle(color: Colors.white),
-                          )),
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(child: Text(yi)),
-                      ]),
-                      const SizedBox(height: 6),
-                      Row(children: [
-                        Container(
-                          width: 26,
-                          height: 26,
-                          decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(50),
-                            ),
-                            color: Colors.red,
-                          ),
-                          child: const Center(
-                              child: Text(
-                            '忌',
-                            style: TextStyle(color: Colors.white),
-                          )),
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(child: Text(ji)),
-                      ]),
-                    ],
+                      color: Colors.white,
+                    ),
+                    child: ValueListenableBuilder<List<Event>>(
+                      valueListenable: _selectedEvents,
+                      builder: (context, value, _) {
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: value.length,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 18, vertical: 10),
+                              child: SwipeActionCell(
+                                backgroundColor: Colors.white,
+                                key: ValueKey(value[index].title),
+                                trailingActions: <SwipeAction>[
+                                  SwipeAction(
+                                    nestedAction:
+                                        SwipeNestedAction(title: "确认"),
+                                    title: "删除",
+                                    onTap: (CompletionHandler handler) async {
+                                      await handler(true);
+                                      _removeEventsForDay(_selectedDay, index,
+                                          value[index].title);
+                                      setState(() {});
+                                    },
+                                    color: Colors.red,
+                                  ),
+                                ],
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 6),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.event_note_outlined),
+                                      const SizedBox(width: 8),
+                                      Expanded(child: Text('${value[index]}')),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ),
-                const Divider(height: 2),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 5),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(20),
+                      ),
+                      color: Colors.white,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                lunarYearMonth,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                '第${SolarWeek.fromDate(_selectedDay, 0).getIndexInYear()}周',
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${lunarDate.getYearInGanZhi()}${lunarDate.getYearShengXiao()}年 ${lunarDate.getMonthInGanZhi()}月 ${lunarDate.getDayInGanZhi()}日',
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(children: [
+                            Container(
+                              width: 26,
+                              height: 26,
+                              decoration: const BoxDecoration(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(50),
+                                ),
+                                color: Colors.green,
+                              ),
+                              child: const Center(
+                                  child: Text(
+                                '宜',
+                                style: TextStyle(color: Colors.white),
+                              )),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(child: Text(yi)),
+                          ]),
+                          const SizedBox(height: 6),
+                          Row(children: [
+                            Container(
+                              width: 26,
+                              height: 26,
+                              decoration: const BoxDecoration(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(50),
+                                ),
+                                color: Colors.red,
+                              ),
+                              child: const Center(
+                                  child: Text(
+                                '忌',
+                                style: TextStyle(color: Colors.white),
+                              )),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(child: Text(ji)),
+                          ]),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Visibility(
+                  visible: jiriList.isNotEmpty,
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 18, vertical: 5),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(20),
+                        ),
+                        color: Colors.white,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: jiriList.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return ListTile(
+                              title: Text(jiriList[index]),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Visibility(
+                  visible: historyTodayEvents != null &&
+                      historyTodayEvents.events.isNotEmpty,
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 18, vertical: 5),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(20),
+                        ),
+                        color: Colors.white,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              '历史上的今天',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontSize: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: historyTodayEvents?.events.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.event,
+                                        color: Colors.blueGrey,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          historyTodayEvents!.events[index],
+                                          style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.blueGrey),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40),
               ],
             ),
           ],
