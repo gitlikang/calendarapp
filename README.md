@@ -22,7 +22,7 @@
 
 
 
-## 技术栈
+## 库
 
 * [lunar-flutter](https://github.com/6tail/lunar-flutter)
 * [table_calendar](https://github.com/aleksanderwozniak/table_calendar)
