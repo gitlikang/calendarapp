@@ -24,5 +24,5 @@
 
 ## 技术栈
 
-* [lunar-flutter] (https://github.com/6tail/lunar-flutter)
-* [table_calendar] (https://github.com/aleksanderwozniak/table_calendar)
+* [lunar-flutter](https://github.com/6tail/lunar-flutter)
+* [table_calendar](https://github.com/aleksanderwozniak/table_calendar)
