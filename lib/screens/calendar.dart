@@ -29,6 +29,8 @@ class _CalendarState extends State<Calendar> {
   final _eventInputController = TextEditingController();
   var _hts = <String, HistoryData>{};
 
+  bool _showTodayOfHistory = true;
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +43,7 @@ class _CalendarState extends State<Calendar> {
 
     _selectedDay = _focusedDay;
     _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay));
+    _showTodayOfHistory = SpUtils.getString('switchHistoryToday') != '0';
   }
 
   @override
@@ -323,7 +326,7 @@ class _CalendarState extends State<Calendar> {
                   style: style.getTextStyle(
                       isWeekend: isWeekend,
                       selectFlag: selectFlag,
-                      todayFlag: false,
+                      todayFlag: todayFlag,
                       outsideFlag: outsideFlag),
                   children: <TextSpan>[
                     TextSpan(
@@ -353,9 +356,12 @@ class _CalendarState extends State<Calendar> {
 
     var jiriList = jieriList(_selectedDay);
 
-    var historyTodayEvents = _hts[
-        _selectedDay.month.toString().padLeft(2, '0') +
-            _selectedDay.day.toString().padLeft(2, '0')];
+    HistoryData? historyTodayEvents;
+
+    if (_showTodayOfHistory) {
+      historyTodayEvents = _hts[_selectedDay.month.toString().padLeft(2, '0') +
+          _selectedDay.day.toString().padLeft(2, '0')];
+    }
 
     return Scaffold(
         backgroundColor: const Color.fromARGB(0xFF, 0xF4, 0xF4, 0xF4),
@@ -391,6 +397,36 @@ class _CalendarState extends State<Calendar> {
                 },
                 child: const Icon(Icons.add_box),
               )
+            ],
+          ),
+        ),
+        drawer: Drawer(
+          // Add a ListView to the drawer. This ensures the user can scroll
+          // through the options in the drawer if there isn't enough vertical
+          // space to fit everything.
+          child: ListView(
+            // Important: Remove any padding from the ListView.
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                ),
+                child: Text('设置'),
+              ),
+              CheckboxListTile(
+                secondary: const Icon(Icons.history),
+                title: const Text('显示历史上的今天'),
+                value: _showTodayOfHistory,
+                onChanged: (bool? value) {
+                  if (value != null) {
+                    SpUtils.putString('switchHistoryToday', value ? '1' : '0');
+                    setState(() {
+                      _showTodayOfHistory = value;
+                    });
+                  }
+                },
+              ),
             ],
           ),
         ),

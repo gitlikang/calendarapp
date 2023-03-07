@@ -31,7 +31,7 @@ class Style {
       this.weekendTextStyle = const TextStyle(color: Colors.black),
       this.defaultTextStyle = const TextStyle(color: Colors.black),
       this.todayTextStyle = const TextStyle(
-        color: Colors.green,
+        color: Colors.white,
       ),
       this.outsideTextStyle = const TextStyle(color: Color(0xFFAEAEAE)),
       this.festivalTextStyle = const TextStyle(
@@ -63,11 +63,9 @@ class Style {
     return outsideFlag
         ? outsideTextStyle
         : todayFlag
-            ? jiejiari || isWeekend
-                ? selectFlag
-                    ? defaultTextStyle
-                    : todayTextStyle
-                : todayTextStyle
+            ? selectFlag
+                ? todayTextStyle
+                : defaultTextStyle
             : jiejiari
                 ? festivalTextStyle
                 : isWeekend
