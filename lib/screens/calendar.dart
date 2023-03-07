@@ -412,7 +412,7 @@ class _CalendarState extends State<Calendar> {
                 decoration: BoxDecoration(
                   color: Colors.blue,
                 ),
-                child: Text('设置'),
+                child: Icon(Icons.settings),
               ),
               CheckboxListTile(
                 secondary: const Icon(Icons.history),
