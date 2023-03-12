@@ -14,6 +14,8 @@ class Style {
 
   final TextStyle festivalTextStyle;
 
+  static const double fontSize = 10;
+
   const Style(
       {this.selectedDecoration = const BoxDecoration(
         color: Color.fromARGB(0xFF, 0xD0, 0xD0, 0xD0),
@@ -28,15 +30,16 @@ class Style {
         shape: BoxShape.rectangle,
       ),
       this.outsideDecoration = const BoxDecoration(shape: BoxShape.rectangle),
-      this.weekendTextStyle = const TextStyle(color: Colors.black),
-      this.defaultTextStyle = const TextStyle(color: Colors.black),
-      this.todayTextStyle = const TextStyle(
-        color: Colors.white,
-      ),
-      this.outsideTextStyle = const TextStyle(color: Color(0xFFAEAEAE)),
-      this.festivalTextStyle = const TextStyle(
-        color: Colors.blue,
-      )});
+      this.weekendTextStyle =
+          const TextStyle(color: Colors.black, fontSize: fontSize),
+      this.defaultTextStyle =
+          const TextStyle(color: Colors.black, fontSize: fontSize),
+      this.todayTextStyle =
+          const TextStyle(color: Colors.white, fontSize: fontSize),
+      this.outsideTextStyle =
+          const TextStyle(color: Color(0xFFAEAEAE), fontSize: fontSize),
+      this.festivalTextStyle =
+          const TextStyle(color: Colors.blue, fontSize: fontSize)});
 
   Decoration getDecoration(
       {bool selectFlag = false,
