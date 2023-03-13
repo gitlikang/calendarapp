@@ -442,6 +442,8 @@ class _CalendarState extends State<Calendar> {
                   headerStyle: const HeaderStyle(
                     formatButtonVisible: false,
                   ),
+                  pageJumpingEnabled: true,
+                  daysOfWeekHeight: 25,
                   firstDay: DateTime.utc(1900, 1, 1),
                   lastDay: DateTime.utc(3000, 11, 21),
                   focusedDay: _focusedDay,
