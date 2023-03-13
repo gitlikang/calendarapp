@@ -322,13 +322,14 @@ class _CalendarState extends State<Calendar> {
           RichText(
               textAlign: TextAlign.center,
               text: TextSpan(
-                  text: '${day.day}',
-                  style: style.getTextStyle(
-                      isWeekend: isWeekend,
-                      selectFlag: selectFlag,
-                      todayFlag: todayFlag,
-                      outsideFlag: outsideFlag),
                   children: <TextSpan>[
+                    TextSpan(
+                      text: '${day.day}',
+                      style: style.getDayTextStyle(
+                        isWeekend: isWeekend,
+                        selectFlag: selectFlag,
+                        todayFlag: todayFlag,
+                        outsideFlag: outsideFlag),),
                     TextSpan(
                       text: '\n$jr',
                       style: style.getTextStyle(
@@ -364,7 +365,7 @@ class _CalendarState extends State<Calendar> {
     }
 
     return Scaffold(
-        backgroundColor: const Color.fromARGB(0xFF, 0xF4, 0xF4, 0xF4),
+        backgroundColor: const Color.fromARGB(0xFF, 0xF8, 0xF8, 0xF8),
         appBar: AppBar(
           title: const Text('日历'),
         ),

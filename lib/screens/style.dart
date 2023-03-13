@@ -7,14 +7,21 @@ class Style {
   final Decoration todayDecoration;
   final Decoration outsideDecoration;
 
+  final TextStyle weekendTextStyleDay;
+  final TextStyle defaultTextStyleDay;
+  final TextStyle todayTextStyleDay;
+  final TextStyle outsideTextStyleDay;
+  final TextStyle festivalTextStyleDay;
+
   final TextStyle weekendTextStyle;
   final TextStyle defaultTextStyle;
   final TextStyle todayTextStyle;
   final TextStyle outsideTextStyle;
-
   final TextStyle festivalTextStyle;
 
-  static const double fontSize = 10;
+
+  static const double fontSizeDay = 16;
+  static const double fontSize = 12;
 
   const Style(
       {this.selectedDecoration = const BoxDecoration(
@@ -30,14 +37,24 @@ class Style {
         shape: BoxShape.rectangle,
       ),
       this.outsideDecoration = const BoxDecoration(shape: BoxShape.rectangle),
+      this.weekendTextStyleDay =
+          const TextStyle(color: Colors.black, fontSize: fontSizeDay, fontWeight: FontWeight.bold),
+      this.defaultTextStyleDay =
+          const TextStyle(color: Colors.black, fontSize: fontSizeDay, fontWeight: FontWeight.bold),
+      this.todayTextStyleDay =
+          const TextStyle(color: Colors.white, fontSize: fontSizeDay, fontWeight: FontWeight.bold),
+      this.outsideTextStyleDay =
+          const TextStyle(color: Color(0xFFAEAEAE), fontSize: fontSizeDay, fontWeight: FontWeight.bold),
+      this.festivalTextStyleDay =
+          const TextStyle(color: Colors.blue, fontSize: fontSizeDay, fontWeight: FontWeight.bold),
       this.weekendTextStyle =
           const TextStyle(color: Colors.black, fontSize: fontSize),
       this.defaultTextStyle =
-          const TextStyle(color: Colors.black, fontSize: fontSize),
+          const TextStyle(color: Color(0xFF909090), fontSize: fontSize),
       this.todayTextStyle =
           const TextStyle(color: Colors.white, fontSize: fontSize),
       this.outsideTextStyle =
-          const TextStyle(color: Color(0xFFAEAEAE), fontSize: fontSize),
+          const TextStyle(color: Colors.grey, fontSize: fontSize),
       this.festivalTextStyle =
           const TextStyle(color: Colors.blue, fontSize: fontSize)});
 
@@ -55,6 +72,25 @@ class Style {
             : isWeekend
                 ? weekendDecoration
                 : defaultDecoration;
+  }
+
+    TextStyle getDayTextStyle(
+      {bool selectFlag = false,
+      todayFlag = false,
+      outsideFlag = false,
+      isWeekend = false,
+      jiejiari = false}) {
+    return outsideFlag
+        ? outsideTextStyleDay
+        : todayFlag
+            ? selectFlag
+                ? todayTextStyleDay
+                : defaultTextStyleDay
+            : jiejiari
+                ? festivalTextStyleDay
+                : isWeekend
+                    ? weekendTextStyleDay
+                    : defaultTextStyleDay;
   }
 
   TextStyle getTextStyle(
